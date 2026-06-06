@@ -93,6 +93,9 @@ if (missingEnvVars.length > 0) {
 
 // ================= APP INIT =================
 const app = express();
+app.set('trust proxy', 1);
+
+
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "same-site" }, // Changed from 'cross-origin'
   contentSecurityPolicy: {
@@ -178,6 +181,7 @@ app.use((req, res, next) => {
 
 // ================= BODY PARSER =================
 app.use(express.json({ limit: '10mb' }));
+
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ================= REQUEST LOGGER =================
