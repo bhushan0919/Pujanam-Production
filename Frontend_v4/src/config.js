@@ -1,6 +1,6 @@
 // Frontend/src/config.js
 const DEFAULT_DEV_API_URL = 'http://localhost:5000/api';
-const DEFAULT_PROD_API_URL = 'https://pujanam-divine-puja-astrology-platform.onrender.com/api';
+const DEFAULT_PROD_API_URL =   'https://pujanam-production.onrender.com/api';
 
 const isLocalhostApiUrl = (url) => /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?\/api$/i.test(url);
 
