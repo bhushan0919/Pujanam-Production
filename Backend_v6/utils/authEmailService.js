@@ -11,11 +11,16 @@ class AuthEmailService {
       this.transporter = nodemailer.createTransport({ jsonTransport: true });
     } else {
       this.transporter = nodemailer.createTransport({
-        service: emailService,
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: Number(process.env.EMAIL_PORT) || 587,
+        secure: false,
         auth: {
           user: this.emailUser,
-          pass: emailPass
-        }
+          pass: emailPass,
+        },
+        connectionTimeout: 30000,
+        greetingTimeout: 30000,
+        socketTimeout: 30000,
       });
     }
 

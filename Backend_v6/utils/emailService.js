@@ -5,11 +5,16 @@ class EmailService {
   constructor() {
     // Configure email transporter
     this.transporter = nodemailer.createTransport({
-      service: 'gmail', // or 'outlook', 'yahoo', etc.
-      auth: {
-        user: process.env.EMAIL_USER, // Your email address
-        pass: process.env.EMAIL_PASS  // Your email password or app password
-      }
+       host: process.env.EMAIL_HOST,
+  port: Number(process.env.EMAIL_PORT),
+  secure: false, // port 587
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
     });
   }
 
