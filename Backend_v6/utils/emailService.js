@@ -1,233 +1,106 @@
-// backend/utils/emailService.js
-const nodemailer = require('nodemailer');
+const { BrevoClient } = require('@getbrevo/brevo');
 
 class EmailService {
   constructor() {
-    // Configure email transporter
-    this.transporter = nodemailer.createTransport({
-       host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: false, // port 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
+    this.client = new BrevoClient(process.env.BREVO_API_KEY);
+    this.fromEmail = process.env.EMAIL_FROM || 'noreply@yourdomain.com';
+    this.fromName = process.env.EMAIL_FROM_NAME || 'Pujanam';
+  }
+
+  async _send({ to, toName, subject, html }) {
+    return this.client.transactionalEmails.sendTransacEmail({
+      sender: { name: this.fromName, email: this.fromEmail },
+      to: [{ email: to, name: toName || 'User' }],
+      subject,
+      htmlContent: html,
     });
   }
 
-  // Send password reset email
   async sendPasswordResetEmail(to, resetCode, name) {
     try {
-      const mailOptions = {
-        from: `"Pujanam" <${process.env.EMAIL_USER}>`,
-        to: to,
-        subject: 'Password Reset Request - Pujanam',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <style>
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-              .container { max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }
-              .header { background: #4CAF50; color: white; padding: 10px; text-align: center; border-radius: 5px 5px 0 0; }
-              .content { padding: 20px; }
-              .code { font-size: 32px; font-weight: bold; text-align: center; letter-spacing: 5px; background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 20px 0; }
-              .footer { text-align: center; font-size: 12px; color: #666; margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee; }
-              .warning { color: #ff9800; font-size: 12px; text-align: center; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h2>Pujanam</h2>
-              </div>
-              <div class="content">
-                <p>Dear ${name || 'User'},</p>
-                <p>We received a request to reset your password for your Pujanam account.</p>
-                <p>Please use the following 6-digit code to reset your password:</p>
-                <div class="code">${resetCode}</div>
-                <p>This code will expire in <strong>1 hour</strong>.</p>
-                <p>If you did not request a password reset, please ignore this email.</p>
-                <div class="warning">
-                  ⚠️ Never share this code with anyone, including anyone claiming to be from Pujanam.
-                </div>
-              </div>
-              <div class="footer">
-                <p>© ${new Date().getFullYear()} Pujanam. All rights reserved.</p>
-                <p>Need help? Contact us at support@pujanam.com</p>
-              </div>
+      await this._send({
+        to, toName: name, subject: 'Password Reset Request - Pujanam',
+        html: `<!DOCTYPE html><html><body>
+          <div style="max-width:500px;margin:0 auto;padding:20px;font-family:Arial,sans-serif">
+            <div style="background:#eb8807;color:white;padding:16px;text-align:center;border-radius:8px 8px 0 0"><h2>Pujanam</h2></div>
+            <div style="background:#fff;padding:28px;border:1px solid #eee;border-radius:0 0 8px 8px">
+              <p>Dear ${name || 'User'},</p>
+              <p>Use the code below to reset your password:</p>
+              <div style="font-size:32px;font-weight:bold;text-align:center;letter-spacing:5px;background:#f0f0f0;padding:15px;border-radius:8px;margin:20px 0">${resetCode}</div>
+              <p>This code expires in <strong>1 hour</strong>.</p>
+              <p style="color:#ff9800;font-size:13px">⚠️ Never share this code with anyone.</p>
             </div>
-          </body>
-          </html>
-        `
-      };
-
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log(`📧 Password reset email sent to ${to}: ${info.messageId}`);
+            <p style="text-align:center;font-size:12px;color:#666">© ${new Date().getFullYear()} Pujanam. All rights reserved.</p>
+          </div>
+        </body></html>`
+      });
+      console.log(`📧 Password reset email sent to ${to}`);
       return true;
     } catch (error) {
-      console.error('❌ Email sending error:', error);
+      console.error('❌ Password reset email error:', error?.body || error.message);
       return false;
     }
   }
 
-  // Send booking confirmation email
-  async sendBookingConfirmation(to, bookingDetails, panditDetails) {
+  async sendContactAutoReply(to, name, userMessage) {
     try {
-      const mailOptions = {
-        from: `"Pujanam" <${process.env.EMAIL_USER}>`,
-        to: to,
-        subject: 'Booking Confirmation - Pujanam',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <style>
-              body { font-family: Arial, sans-serif; }
-              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: #4CAF50; color: white; padding: 10px; text-align: center; }
-              .booking-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h2>Booking Confirmed!</h2>
+      await this._send({
+        to, toName: name, subject: 'We received your message - Pujanam',
+        html: `<!DOCTYPE html><html><body>
+          <div style="max-width:500px;margin:0 auto;padding:20px;font-family:Arial,sans-serif;background:#f9f9f9">
+            <div style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:20px;text-align:center;border-radius:8px 8px 0 0"><h2>🙏 Namaste ${name}</h2></div>
+            <div style="background:white;padding:28px;border-radius:0 0 8px 8px">
+              <p>Thank you for reaching out to Pujanam.</p>
+              <p>We have received your message and will get back to you within 24 hours.</p>
+              <div style="background:#f0f0f0;padding:15px;border-radius:8px;margin:20px 0">
+                <strong>Your message:</strong>
+                <p>${userMessage.substring(0, 200)}${userMessage.length > 200 ? '...' : ''}</p>
               </div>
-              <div class="booking-details">
-                <h3>Your Booking Details:</h3>
-                <p><strong>Service:</strong> ${bookingDetails.serviceName}</p>
-                <p><strong>Date & Time:</strong> ${bookingDetails.dateTime}</p>
-                <p><strong>Pandit:</strong> ${panditDetails.name}</p>
-                <p><strong>Contact:</strong> ${panditDetails.contact}</p>
-                <p><strong>Address:</strong> ${bookingDetails.address}</p>
-              </div>
-              <p>Thank you for choosing Pujanam!</p>
+              <p>If urgent, call us at <strong>+91 9373120370</strong>.</p>
+              <p>Reference ID: <strong>${Date.now().toString().slice(-8)}</strong></p>
             </div>
-          </body>
-          </html>
-        `
-      };
-      
-      await this.transporter.sendMail(mailOptions);
-      return true;
-    } catch (error) {
-      console.error('❌ Booking confirmation email error:', error);
-      return false;
-    }
-  }
-   async sendContactAutoReply(to, name, userMessage) {
-    try {
-      const mailOptions = {
-        from: `"Pujanam Support" <${process.env.EMAIL_USER}>`,
-        to: to,
-        subject: 'We received your message - Pujanam',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <style>
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-              .container { max-width: 500px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
-              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; }
-              .content { background: white; padding: 30px; }
-              .message-box { background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 20px 0; }
-              .footer { text-align: center; font-size: 12px; color: #666; margin-top: 20px; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h2>🙏 Namaste ${name}</h2>
-              </div>
-              <div class="content">
-                <p>Thank you for reaching out to Pujanam.</p>
-                <p>We have received your message and our team will get back to you within 24 hours.</p>
-                <div class="message-box">
-                  <strong>Your message:</strong>
-                  <p>${userMessage.substring(0, 200)}${userMessage.length > 200 ? '...' : ''}</p>
-                </div>
-                <p>If this is urgent, please call us at <strong>+91 9373120370</strong>.</p>
-                <p>Reference ID: <strong>${Date.now().toString().slice(-8)}</strong></p>
-              </div>
-              <div class="footer">
-                <p>© ${new Date().getFullYear()} Pujanam. All rights reserved.</p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `
-      };
-      
-      await this.transporter.sendMail(mailOptions);
+            <p style="text-align:center;font-size:12px;color:#666">© ${new Date().getFullYear()} Pujanam. All rights reserved.</p>
+          </div>
+        </body></html>`
+      });
       console.log(`📧 Auto-reply sent to ${to}`);
       return true;
     } catch (error) {
-      console.error('Auto-reply email error:', error);
+      console.error('❌ Auto-reply email error:', error?.body || error.message);
       return false;
     }
   }
 
-  // Send reply from admin to user
   async sendContactReply(to, name, adminReply, originalMessage) {
     try {
-      const mailOptions = {
-        from: `"Pujanam Support" <${process.env.EMAIL_USER}>`,
-        to: to,
-        subject: 'Response to your inquiry - Pujanam',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <style>
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-              .container { max-width: 500px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
-              .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; text-align: center; }
-              .content { background: white; padding: 30px; }
-              .reply-box { background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745; }
-              .original-box { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; font-size: 13px; }
-              .footer { text-align: center; font-size: 12px; color: #666; margin-top: 20px; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h2>Response from Pujanam Team</h2>
+      await this._send({
+        to, toName: name, subject: 'Response to your inquiry - Pujanam',
+        html: `<!DOCTYPE html><html><body>
+          <div style="max-width:500px;margin:0 auto;padding:20px;font-family:Arial,sans-serif;background:#f9f9f9">
+            <div style="background:linear-gradient(135deg,#28a745,#20c997);color:white;padding:20px;text-align:center;border-radius:8px 8px 0 0"><h2>Response from Pujanam Team</h2></div>
+            <div style="background:white;padding:28px;border-radius:0 0 8px 8px">
+              <p>Dear ${name},</p>
+              <div style="background:#e8f5e9;padding:15px;border-radius:8px;margin:20px 0;border-left:4px solid #28a745">
+                <strong>📝 Our Response:</strong>
+                <p>${adminReply}</p>
               </div>
-              <div class="content">
-                <p>Dear ${name},</p>
-                <div class="reply-box">
-                  <strong>📝 Our Response:</strong>
-                  <p>${adminReply}</p>
-                </div>
-                <div class="original-box">
-                  <strong>Your original message:</strong>
-                  <p>${originalMessage.substring(0, 300)}${originalMessage.length > 300 ? '...' : ''}</p>
-                </div>
-                <p>If you have any further questions, feel free to reply to this email.</p>
-                <p>🙏 Thank you for choosing Pujanam.</p>
+              <div style="background:#f5f5f5;padding:15px;border-radius:8px;font-size:13px">
+                <strong>Your original message:</strong>
+                <p>${originalMessage.substring(0, 300)}${originalMessage.length > 300 ? '...' : ''}</p>
               </div>
-              <div class="footer">
-                <p>© ${new Date().getFullYear()} Pujanam. All rights reserved.</p>
-              </div>
+              <p>🙏 Thank you for choosing Pujanam.</p>
             </div>
-          </body>
-          </html>
-        `
-      };
-      
-      await this.transporter.sendMail(mailOptions);
+            <p style="text-align:center;font-size:12px;color:#666">© ${new Date().getFullYear()} Pujanam. All rights reserved.</p>
+          </div>
+        </body></html>`
+      });
       console.log(`📧 Reply sent to ${to}`);
       return true;
     } catch (error) {
-      console.error('Reply email error:', error);
+      console.error('❌ Contact reply error:', error?.body || error.message);
       return false;
     }
   }
-
 }
 
 module.exports = new EmailService();

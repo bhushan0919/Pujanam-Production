@@ -74,12 +74,16 @@ exports.sendOtp = async (req, res) => {
       expiresAt
     });
 
-    const emailSent = await authEmailService.sendRegistrationOtpEmail({
-      to: normalizedEmail,
-      name: String(name).trim(),
-      otp,
-      expiresInMinutes: OTP_EXPIRY_MINUTES
-    });
+    console.time('OTP_EMAIL_SEND');
+
+const emailSent = await authEmailService.sendRegistrationOtpEmail({
+  to: normalizedEmail,
+  name: String(name).trim(),
+  otp,
+  expiresInMinutes: OTP_EXPIRY_MINUTES
+});
+
+console.timeEnd('OTP_EMAIL_SEND');
 
     if (!emailSent) {
       await RegistrationOtp.deleteMany({

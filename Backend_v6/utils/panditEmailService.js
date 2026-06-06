@@ -1,29 +1,38 @@
 // backend/utils/panditEmailService.js
-const nodemailer = require('nodemailer');
-
+// const nodemailer = require('nodemailer');
+const { BrevoClient } = require('@getbrevo/brevo');
 // Configure email transporter
-const transporter = nodemailer.createTransport({
-   host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: false, // port 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
-});
+const _getApiInstance = () => {
+  const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+  apiInstance.setApiKey(
+    SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
+    process.env.BREVO_API_KEY
+  );
+  return apiInstance;
+};
+
+const _send = async ({ to, toName, subject, html }) => {
+  const client = new BrevoClient(process.env.BREVO_API_KEY);
+  return client.transactionalEmails.sendTransacEmail({
+    sender: {
+      name: process.env.EMAIL_FROM_NAME || 'Pujanam',
+      email: process.env.EMAIL_FROM || 'noreply@yourdomain.com'
+    },
+    to: [{ email: to, name: toName || 'User' }],
+    subject,
+    htmlContent: html,
+  });
+};
 
 // Send welcome email to new pandit
 const sendPanditWelcomeEmail = async (pandit, plainPassword) => {
   try {
     console.log(`📧 Sending welcome email to: ${pandit.email}`);
-    
-    const loginUrl = process.env.FRONTEND_URL 
+
+    const loginUrl = process.env.FRONTEND_URL
       ? `${process.env.FRONTEND_URL}/pandit-login`
       : 'http://localhost:5173/pandit-login';
-    
+
     const mailOptions = {
       from: `"Pujanam Admin" <${process.env.EMAIL_USER}>`,
       to: pandit.email,
@@ -198,11 +207,12 @@ const sendPanditWelcomeEmail = async (pandit, plainPassword) => {
         </html>
       `,
     };
-    
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Welcome email sent to ${pandit.email}: ${info.messageId}`);
+
+    await _send({ to: pandit.email, toName: pandit.name, subject: mailOptions.subject, html: mailOptions.html });
+    console.log(`✅ Welcome email sent to ${pandit.email}`);
+
     return true;
-    
+
   } catch (error) {
     console.error('❌ Failed to send welcome email:', error);
     return false;
@@ -213,7 +223,7 @@ const sendPanditWelcomeEmail = async (pandit, plainPassword) => {
 const sendPanditPasswordResetEmail = async (pandit, resetToken) => {
   try {
     const resetLink = `${process.env.FRONTEND_URL}/pandit-reset-password?token=${resetToken}`;
-    
+
     const mailOptions = {
       from: `"Pujanam Support" <${process.env.EMAIL_USER}>`,
       to: pandit.email,
@@ -263,11 +273,11 @@ const sendPanditPasswordResetEmail = async (pandit, resetToken) => {
         </html>
       `
     };
-    
-    const info = await transporter.sendMail(mailOptions);
+
+    await _send({ to: pandit.email, toName: pandit.name, subject: mailOptions.subject, html: mailOptions.html });
     console.log(`✅ Password reset email sent to ${pandit.email}`);
     return true;
-    
+
   } catch (error) {
     console.error('❌ Failed to send password reset email:', error);
     return false;
