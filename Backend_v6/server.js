@@ -1,6 +1,8 @@
 // server.js
 
 // ================= IMPORTS =================
+require('dotenv').config();
+console.log('BREVO KEY loaded:', !!process.env.BREVO_API_KEY);
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -12,7 +14,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+
 const compatibilityRoutes = require('./routes/compatibility');
 const { startCleanupJobs } = require('./utils/cleanupJobs');
 

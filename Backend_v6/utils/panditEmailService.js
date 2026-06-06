@@ -12,7 +12,8 @@ const _getApiInstance = () => {
 };
 
 const _send = async ({ to, toName, subject, html }) => {
-  const client = new BrevoClient(process.env.BREVO_API_KEY);
+  const { BrevoClient } = require('@getbrevo/brevo');
+  const client = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
   return client.transactionalEmails.sendTransacEmail({
     sender: {
       name: process.env.EMAIL_FROM_NAME || 'Pujanam',

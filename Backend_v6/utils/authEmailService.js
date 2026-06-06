@@ -2,20 +2,21 @@ const { BrevoClient } = require('@getbrevo/brevo');
 
 class AuthEmailService {
   constructor() {
-    this.client = new BrevoClient(process.env.BREVO_API_KEY);
-    this.fromEmail = process.env.EMAIL_FROM || 'noreply@yourdomain.com';
-    this.fromName = process.env.EMAIL_FROM_NAME || 'Pujanam';
-    console.log('✅ AuthEmailService initialized with Brevo');
-  }
+  this.fromEmail = process.env.EMAIL_FROM || 'noreply@yourdomain.com';
+  this.fromName = process.env.EMAIL_FROM_NAME || 'Pujanam';
+  console.log('✅ AuthEmailService initialized');
+}
 
-  async _send({ to, toName, subject, html }) {
-    return this.client.transactionalEmails.sendTransacEmail({
-      sender: { name: this.fromName, email: this.fromEmail },
-      to: [{ email: to, name: toName || 'User' }],
-      subject,
-      htmlContent: html,
-    });
-  }
+async _send({ to, toName, subject, html }) {
+  const { BrevoClient } = require('@getbrevo/brevo');
+  const client = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
+  return client.transactionalEmails.sendTransacEmail({
+    sender: { name: this.fromName, email: this.fromEmail },
+    to: [{ email: to, name: toName || 'User' }],
+    subject,
+    htmlContent: html,
+  });
+}
 
   async sendRegistrationOtpEmail({ to, name, otp, expiresInMinutes = 5 }) {
     try {
