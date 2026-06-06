@@ -15,6 +15,7 @@ import {
   faEyeSlash,
   faHouse,
   faLock,
+  faPhone,
   faSpinner,
   faUser,
 } from '@fortawesome/free-solid-svg-icons';
@@ -26,7 +27,9 @@ const UserLogin = () => {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [acceptPolicies, setAcceptPolicies] = useState(false);
+  const [loginAcceptPolicies, setLoginAcceptPolicies] = useState(false);
+  const [registerAcceptPolicies, setRegisterAcceptPolicies] = useState(false);
+  const [registerSubmitAttempted, setRegisterSubmitAttempted] = useState(false);
 
   // Login State
   const [loginCredentials, setLoginCredentials] = useState({
@@ -63,11 +66,6 @@ const UserLogin = () => {
     setOtpSent(false);
     setResendCountdown(0);
   }, []);
-
-  const generateRegistrationPhone = () => {
-    const digits = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10)).join('');
-    return `7${digits}`;
-  };
 
   // Login Handlers
   const handleLoginChange = (e) => {
@@ -118,7 +116,9 @@ const UserLogin = () => {
   // Register Handlers
   const handleRegisterChange = (e) => {
     const { name, value } = e.target;
-    const nextValue = name === 'otp' ? value.replace(/\D/g, '').slice(0, 6) : value;
+    const nextValue = name === 'otp' ? value.replace(/\D/g, '').slice(0, 6)
+      : name === 'phone' ? value.replace(/\D/g, '').slice(0, 10)
+      : value;
 
     setRegisterData({
       ...registerData,
@@ -184,7 +184,7 @@ const UserLogin = () => {
     };
   }, [otpSent, registerData.name, registerData.email, registerData.phone, registerData.otp]);
 
-  const validateRegisterForm = (formData = registerData, requireOtp = false) => {
+  const validateRegisterForm = (formData = registerData, requireOtp = false, otpOnly = false) => {
     if (!formData.name.trim()) {
       setRegisterError('Name is required');
       return false;
@@ -193,21 +193,23 @@ const UserLogin = () => {
       setRegisterError('Email is required');
       return false;
     }
-    if (!/^\d{10}$/.test(formData.phone)) {
-      setRegisterError('Valid 10-digit phone number is required');
-      return false;
-    }
-    if (formData.password.length < 6) {
-      setRegisterError('Password must be at least 6 characters');
-      return false;
-    }
-    if (requireOtp && formData.password !== formData.confirmPassword) {
-      setRegisterError('Passwords do not match');
-      return false;
-    }
-    if (requireOtp && !/^\d{6}$/.test(formData.otp)) {
-      setRegisterError('Enter the 6-digit OTP sent to your email');
-      return false;
+    if (!otpOnly) {
+      if (!/^\d{10}$/.test(formData.phone)) {
+        setRegisterError('Valid 10-digit phone number is required');
+        return false;
+      }
+      if (formData.password.length < 6) {
+        setRegisterError('Password must be at least 6 characters');
+        return false;
+      }
+      if (requireOtp && formData.password !== formData.confirmPassword) {
+        setRegisterError('Passwords do not match');
+        return false;
+      }
+      if (requireOtp && !/^\d{6}$/.test(formData.otp)) {
+        setRegisterError('Enter the 6-digit OTP sent to your email');
+        return false;
+      }
     }
     return true;
   };
@@ -215,15 +217,10 @@ const UserLogin = () => {
   const handleSendOtp = async (e) => {
     e.preventDefault();
 
-    const phone = registerData.phone || generateRegistrationPhone();
-    const otpPayload = { ...registerData, phone };
+    const otpPayload = { ...registerData };
 
-    if (!validateRegisterForm(otpPayload, false)) {
+    if (!validateRegisterForm(otpPayload, false, true)) {
       return;
-    }
-
-    if (!registerData.phone) {
-      setRegisterData((prev) => ({ ...prev, phone }));
     }
 
     setOtpLoading(true);
@@ -255,8 +252,11 @@ const UserLogin = () => {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
 
-    if (!acceptPolicies) {
+    setRegisterSubmitAttempted(true);
+
+    if (!registerAcceptPolicies) {
       setRegisterError('Please accept the Terms and Conditions and Privacy Statement');
+      toast.error('Please accept the Terms and Conditions and Privacy Statement');
       return;
     }
 
@@ -265,15 +265,10 @@ const UserLogin = () => {
       return;
     }
 
-    const phone = registerData.phone || generateRegistrationPhone();
-    const registrationPayload = { ...registerData, phone };
+    const registrationPayload = { ...registerData };
 
     if (!validateRegisterForm(registrationPayload, true)) {
       return;
-    }
-
-    if (!registerData.phone) {
-      setRegisterData((prev) => ({ ...prev, phone }));
     }
 
     setRegisterLoading(true);
@@ -281,13 +276,18 @@ const UserLogin = () => {
 
     try {
       const { confirmPassword, ...userData } = registrationPayload;
+      userData.acceptPolicies = true;
 
       const result = await userApi.register(userData);
 
-      if (result.success && result.token) {
-        authStorage.saveAuth('user', result.token, result.customer);
-        toast.success(result.message || 'Registration successful!');
-        navigate('/user/dashboard');
+      if (result.success) {
+        toast.success('Registration successful! Please log in to continue.');
+        setRegisterData({ name: '', email: '', otp: '', phone: '', password: '', confirmPassword: '' });
+        setRegisterAcceptPolicies(false);
+        setRegisterSubmitAttempted(false);
+        setOtpSent(false);
+        setOtpVerifyStatus('idle');
+        switchToLogin();
 
       } else {
         setRegisterError(result.message || 'Registration failed');
@@ -314,12 +314,14 @@ const UserLogin = () => {
     setIsActive(true);
     setLoginError('');
     setRegisterError('');
+    setRegisterSubmitAttempted(false);
   };
 
   const switchToLogin = () => {
     setIsActive(false);
     setLoginError('');
     setRegisterError('');
+    setRegisterSubmitAttempted(false);
   };
 
   return (
@@ -424,8 +426,8 @@ const UserLogin = () => {
                 <label className="auth-policy">
                   <input
                     type="checkbox"
-                    checked={acceptPolicies}
-                    onChange={(e) => setAcceptPolicies(e.target.checked)}
+                    checked={loginAcceptPolicies}
+                    onChange={(e) => setLoginAcceptPolicies(e.target.checked)}
                   />
                   <span>
                     You agree to accept the <Link to="/terms-conditions">Terms and Conditions</Link> &{' '}
@@ -433,10 +435,10 @@ const UserLogin = () => {
                   </span>
                 </label>
 
-                {!acceptPolicies && (
+                {!loginAcceptPolicies && (
                   <p className="auth-error-message" style={{fontSize:'13px',marginBottom:'8px'}}>⚠️ You must accept the Privacy Policy and Terms &amp; Conditions to continue.</p>
                 )}
-                <button type="submit" className="auth-submit" disabled={loginLoading || !acceptPolicies}>
+                <button type="submit" className="auth-submit" disabled={loginLoading || !loginAcceptPolicies}>
                   {loginLoading ? <LoadingSpinner size="small" /> : <><FontAwesomeIcon icon={faLock} /> Sign In</>}
                 </button>
 
@@ -547,6 +549,25 @@ const UserLogin = () => {
                 )}
 
                 <div className="auth-field">
+                  <label htmlFor="register-phone">Mobile Number <span className="auth-required">*</span></label>
+                  <div className="auth-input-shell">
+                    <input
+                      id="register-phone"
+                      type="tel"
+                      name="phone"
+                      placeholder="Enter 10-digit mobile number"
+                      value={registerData.phone}
+                      onChange={handleRegisterChange}
+                      maxLength="10"
+                      inputMode="numeric"
+                      required
+                      disabled={registerLoading}
+                    />
+                    <FontAwesomeIcon icon={faPhone} className="auth-input-icon" />
+                  </div>
+                </div>
+
+                <div className="auth-field">
                   <label htmlFor="register-password">Password <span className="auth-required">*</span></label>
                   <div className="auth-input-shell">
                     <input
@@ -597,8 +618,8 @@ const UserLogin = () => {
                 <label className="auth-policy">
                   <input
                     type="checkbox"
-                    checked={acceptPolicies}
-                    onChange={(e) => setAcceptPolicies(e.target.checked)}
+                    checked={registerAcceptPolicies}
+                    onChange={(e) => setRegisterAcceptPolicies(e.target.checked)}
                   />
                   <span>
                     I agree to the <Link to="/terms-conditions">Terms and Conditions</Link> and{' '}
@@ -606,10 +627,10 @@ const UserLogin = () => {
                   </span>
                 </label>
 
-                {!acceptPolicies && (
+                {registerSubmitAttempted && !registerAcceptPolicies && (
                   <p className="auth-error-message" style={{fontSize:'13px',marginBottom:'8px'}}>⚠️ You must accept the Privacy Policy and Terms &amp; Conditions to continue.</p>
                 )}
-                <button type="submit" className="auth-submit" disabled={registerLoading || !acceptPolicies}>
+                <button type="submit" className="auth-submit" disabled={registerLoading}>
                   {registerLoading ? 'Creating Account...' : 'SIGN UP'}
                 </button>
 

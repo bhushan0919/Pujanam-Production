@@ -276,12 +276,23 @@ exports.register = async (req, res) => {
       });
     }
 
-    const customer = await Customer.create({
+    // Insert directly via collection to bypass the Customer pre-save hook.
+    // pending.passwordHash is already bcrypt-hashed (done in sendOtp).
+    // Using Customer.create() would trigger the pre('save') hook and hash it a second time,
+    // making login always fail with "invalid credentials".
+    const insertResult = await Customer.collection.insertOne({
       name: String(name).trim(),
       email: normalizedEmail,
       phone: normalizedPhone,
-      password: pending.passwordHash
+      password: pending.passwordHash,
+      bookings: [],
+      lastLoginAt: null,
+      resetPasswordToken: null,
+      resetPasswordExpires: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
     });
+    const customer = await Customer.findById(insertResult.insertedId);
 
     await RegistrationOtp.deleteOne({ _id: pending._id });
 
