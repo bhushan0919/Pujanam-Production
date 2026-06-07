@@ -828,6 +828,8 @@ async function buildKundali(
     lagnaIdx,
     mahadasha: dashaLord,
     antardasha_list,
+    birthYear: year,
+    dashaBalance: balance,
   });
 
   return {

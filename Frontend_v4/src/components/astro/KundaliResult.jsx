@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { downloadKundaliPDF } from './KundaliPDFExport';
 
 const style = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap');
@@ -174,6 +175,25 @@ const style = `
   }
 
   @keyframes krUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .kr-dl-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(160,120,20,0.25) 100%);
+    border: 1px solid rgba(212,175,55,0.45);
+    color: #D4AF37; font-family: 'Lato', sans-serif; font-weight: 700;
+    font-size: 13px; padding: 9px 20px; border-radius: 22px;
+    cursor: pointer; transition: all 0.25s; letter-spacing: 0.4px;
+    box-shadow: 0 0 14px rgba(212,175,55,0.08);
+  }
+  .kr-dl-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(212,175,55,0.28) 0%, rgba(160,120,20,0.38) 100%);
+    border-color: rgba(212,175,55,0.7); box-shadow: 0 0 20px rgba(212,175,55,0.18);
+    transform: translateY(-1px);
+  }
+  .kr-dl-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .kr-dl-btn .spin { display:inline-block; animation: spin 0.9s linear infinite; }
+  .kr-top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:10px; }
 `;
 
 const PLANET_SYMBOLS = { Sun:'☉',Moon:'☽',Mercury:'☿',Venus:'♀',Mars:'♂',Jupiter:'♃',Saturn:'♄',Rahu:'☊',Ketu:'☋' };
@@ -251,6 +271,7 @@ export default function KundaliResult() {
   const navigate = useNavigate();
   const data = location.state?.data;
   const [activeTab, setActiveTab] = useState('chart');
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   if (!data) return (
     <div style={{minHeight:'100vh',background:'#060400',display:'flex',alignItems:'center',justifyContent:'center',color:'#D4AF37',fontFamily:'Cinzel,serif'}}>
@@ -259,6 +280,18 @@ export default function KundaliResult() {
   );
 
   const { name, kundali } = data;
+
+  const handleDownloadPDF = async () => {
+    setPdfLoading(true);
+    try {
+      await downloadKundaliPDF(name, kundali);
+    } catch (e) {
+      console.error('PDF error:', e);
+      alert('PDF generation failed. Please try again.');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
   const activeYogas = (kundali.yogas||[]).filter(y=>y.present).length;
   const activeDoshas = (kundali.doshas||[]).filter(d=>d.present).length;
   const ss = STRENGTH_STYLES;
@@ -268,7 +301,15 @@ export default function KundaliResult() {
       <style>{style}</style>
       <div className="kr-wrap">
         <div className="kr-inner">
-          <button className="kr-back" onClick={()=>navigate(-1)}>← Back</button>
+          <div className="kr-top-bar">
+            <button className="kr-back" style={{margin:0}} onClick={()=>navigate(-1)}>← Back</button>
+            <button className="kr-dl-btn" onClick={handleDownloadPDF} disabled={pdfLoading}>
+              {pdfLoading
+                ? <><span className="spin">⟳</span> Generating PDF...</>
+                : <>⬇ Download Kundali PDF</>
+              }
+            </button>
+          </div>
 
           {/* Header */}
           <div className="kr-header">
@@ -432,29 +473,54 @@ export default function KundaliResult() {
                   <div className="kr-info-label">Strength</div>
                   <div className="kr-info-val">{kundali.marriage_yoga.strength||'N/A'}</div>
                 </div>
+                <div className="kr-info-card">
+                  <div className="kr-info-label">Marriage Type</div>
+                  <div className="kr-info-val" style={{fontSize:12}}>{kundali.marriage_yoga.marriage_type||'N/A'}</div>
+                </div>
+                <div className="kr-info-card">
+                  <div className="kr-info-label">Score</div>
+                  <div className="kr-info-val">{kundali.marriage_yoga.score||0}/100</div>
+                </div>
               </div>
-              <div className="kr-section-title">Favorable Periods</div>
+              {kundali.marriage_yoga.note && (
+                <div style={{background:'rgba(212,175,55,0.07)',border:'1px solid rgba(212,175,55,0.2)',borderRadius:8,padding:'10px 14px',marginBottom:14,fontSize:12,color:'rgba(255,255,255,0.6)',lineHeight:1.6}}>
+                  ℹ️ {kundali.marriage_yoga.note}
+                </div>
+              )}
+              <div className="kr-section-title">Upcoming Favorable Dasha Periods</div>
               {(kundali.marriage_yoga.favorable_periods||[]).length===0
-                ? <div style={{color:'#90EE90',padding:'10px',fontSize:13}}>No strong periods detected.</div>
+                ? <div style={{color:'rgba(255,255,255,0.5)',padding:'10px',fontSize:13}}>No strong marriage periods in next 10 years.</div>
                 : (kundali.marriage_yoga.favorable_periods||[]).map((p,i)=>(
-                  <div key={i} className="kr-yoga-card present">
-                    <div style={{color:'#90EE90',fontWeight:700,marginBottom:4}}>{p.period}</div>
+                  <div key={i} className="kr-yoga-card present" style={{position:'relative'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+                      <div style={{color:'#90EE90',fontWeight:700}}>{p.period}</div>
+                      <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                        {p.isRunning && <span style={{background:'#90EE90',color:'#000',fontSize:10,fontWeight:700,borderRadius:4,padding:'2px 6px'}}>RUNNING NOW</span>}
+                        {p.years && <span style={{color:'rgba(212,175,55,0.8)',fontSize:12}}>{p.years}</span>}
+                      </div>
+                    </div>
                     <div className="kr-card-desc">{p.reason}</div>
                   </div>
                 ))
               }
               <div className="kr-section-title">Delay Indicators</div>
-              {(kundali.marriage_yoga.delay_indications||[]).map((d,i)=>(
-                <div key={i} className="kr-dosha-card present">
-                  <div className="kr-card-desc">⚠ {d}</div>
-                </div>
-              ))}
+              {(kundali.marriage_yoga.delay_indications||[]).length===0
+                ? <div style={{color:'#90EE90',padding:'10px',fontSize:13}}>No major delay factors found.</div>
+                : (kundali.marriage_yoga.delay_indications||[]).map((d,i)=>(
+                  <div key={i} className="kr-dosha-card present">
+                    <div className="kr-card-desc">⚠ {d}</div>
+                  </div>
+                ))
+              }
               <div className="kr-section-title">Positive Indicators</div>
-              {(kundali.marriage_yoga.reasons||[]).map((r,i)=>(
-                <div key={i} className="kr-yoga-card present">
-                  <div className="kr-card-desc">✨ {r}</div>
-                </div>
-              ))}
+              {(kundali.marriage_yoga.reasons||[]).length===0
+                ? <div style={{color:'rgba(255,255,255,0.4)',padding:'10px',fontSize:13}}>No exceptional placement found — marriage possible through normal dasha timing.</div>
+                : (kundali.marriage_yoga.reasons||[]).map((r,i)=>(
+                  <div key={i} className="kr-yoga-card present">
+                    <div className="kr-card-desc">✨ {r}</div>
+                  </div>
+                ))
+              }
             </div>
           )}
 

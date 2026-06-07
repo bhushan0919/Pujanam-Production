@@ -150,10 +150,6 @@ const style = `
 `;
 
 const SIGN_EMOJIS = {
-  Aries:'मेष',Taurus:'वृषभ',Gemini:'मिथुन',Cancer:'कर्क',Leo:'सिंह',Virgo:'कन्या',
-  Libra:'तूळ',Scorpio:'वृश्चिक',Sagittarius:'धनु',Capricorn:'मकर',Aquarius:'कुंभ',Pisces:'मीन'
-};
-const SIGN_EMOJIS_MARATHI = {
   Aries:'♈',Taurus:'♉',Gemini:'♊',Cancer:'♋',Leo:'♌',Virgo:'♍',
   Libra:'♎',Scorpio:'♏',Sagittarius:'♐',Capricorn:'♑',Aquarius:'♒',Pisces:'♓'
 };
@@ -192,7 +188,6 @@ export default function HoroscopeResult() {
 
   const h = data.horoscope;
   const signEmoji = SIGN_EMOJIS[h.sign] || '⭐';
-  const signEmojim = SIGN_EMOJIS_MARATHI[h.sign] || '⭐';
 
   const domainStyles = {
     love:   { background:'rgba(255,105,180,0.07)', borderColor:'rgba(255,105,180,0.2)' },
@@ -211,8 +206,6 @@ export default function HoroscopeResult() {
           <div className="hr-hero">
             <div className="hr-sign-icon">{signEmoji}</div>
             <div className="hr-sign-name">{h.sign}</div>
-            <div className="hr-sign-icon">{signEmojim}</div>
-            <div className="hr-sign-name">{h.signs}</div>
             <div className="hr-date-label">Daily Horoscope · {h.date}</div>
             <div className="hr-pills">
               <span className="hr-pill">📅 {h.tithi}</span>

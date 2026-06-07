@@ -18,8 +18,8 @@ const ASTRO_SERVICES = [
         category: 'kundali',
         tier: 'free',
         badge: 'FREE',
-        title: 'Kundali Reading & Analysis',
-        shortDesc: 'भवतः ब्रह्माण्डीयस्य खाचित्रस्य एकं दर्शनं प्राप्नुवन्तु।',
+        title: 'Basic Birth Chart Reading',
+        shortDesc: 'Get a glimpse of your cosmic blueprint.',
         description: 'A simple introduction to your celestial chart with clear, beginner-friendly guidance.',
         features: ['Planetary positions', 'Rashi & Lagna details', 'Basic life analysis'],
         price: 'Completely Free',
@@ -53,7 +53,7 @@ const ASTRO_SERVICES = [
         tier: 'free',
         badge: 'FREE',
         title: 'Daily Horoscope',
-        shortDesc: 'ताराभ्यः व्यक्तिगतं नित्यं मार्गदर्शनम्।',
+        shortDesc: 'Personalized daily guidance from the stars.',
         description: 'A clear daily reading with lucky cues, advice, and practical astrological direction.',
         features: ['Daily predictions', 'Lucky color & number', 'Do’s & Don’ts'],
         price: 'Completely Free',
@@ -70,7 +70,7 @@ const ASTRO_SERVICES = [
         tier: 'free',
         badge: 'FREE',
         title: 'Weekly Horoscope',
-        shortDesc: 'ब्रह्माण्डीयमार्गदर्शनेन सह स्वसप्ताहस्य योजनां कुर्वन्तु।',
+        shortDesc: 'Plan your week with cosmic guidance.',
         description: 'A weekly forecast focused on work, emotions, health, and timing.',
         features: ['Weekly predictions', 'Career & finance', 'Health & relationships'],
         price: 'Completely Free',
@@ -87,7 +87,7 @@ const ASTRO_SERVICES = [
         tier: 'free',
         badge: 'Free',
         title: 'Compatibility Analysis',
-        shortDesc: 'सम्बन्धानां कृते विस्तृतसङ्गतिः।',
+        shortDesc: 'Detailed compatibility for relationships.',
         description: 'A relationship reading with guna matching, strengths, and practical suggestions.',
         features: ['Guna Milan', 'Love & marriage analysis', 'Remedies & suggestions'],
         price: 'Completely Free',
@@ -240,11 +240,11 @@ const AstroServices = () => {
         if (service.tier === 'free') {
             if (!isAuthenticated && service.requiresAuth) {
                 localStorage.setItem('redirectAfterLogin', service.actionRoute);
-                navigate('/user/login', {
-                    state: {
+                navigate('/user/login', { 
+                    state: { 
                         message: 'Please login to access Astro Services.',
-                        from: window.location.pathname
-                    }
+                        from: window.location.pathname 
+                    } 
                 });
                 return;
             }
@@ -261,7 +261,7 @@ const AstroServices = () => {
         navigate(service.actionRoute);
     };
 
-
+    
 
     const applyHeroFilter = (value) => {
         setServiceType(value);
@@ -282,20 +282,20 @@ const AstroServices = () => {
                             >
                                 ✕
                             </button>
-
+                            
                             <div className="text-center">
                                 <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-200 to-orange-200">
                                     <span className="text-4xl">🚀</span>
                                 </div>
-
+                                
                                 <h3 className="mb-2 text-2xl font-bold text-amber-800">
                                     Coming Soon!
                                 </h3>
-
+                                
                                 <p className="mb-4 text-gray-600">
                                     <strong>{selectedPremiumService.title}</strong> is currently in development.
                                 </p>
-
+                                
                                 <div className="mb-6 rounded-xl bg-amber-100/50 p-4">
                                     <p className="text-sm text-amber-800">
                                         📅 Expected launch: <strong>Coming weeks</strong>
@@ -304,7 +304,7 @@ const AstroServices = () => {
                                         We'll notify you when it's ready!
                                     </p>
                                 </div>
-
+                                
                                 <button
                                     onClick={() => setShowComingSoonModal(false)}
                                     className="w-full rounded-full bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-3 font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-lg"
@@ -326,7 +326,7 @@ const AstroServices = () => {
                             <p className="font-bold text-white">{toastMessage.title}</p>
                             <p className="text-sm text-amber-100">{toastMessage.message}</p>
                         </div>
-                        <button
+                        <button 
                             onClick={() => setToastMessage(null)}
                             className="ml-2 text-white/70 hover:text-white"
                         >
@@ -336,7 +336,7 @@ const AstroServices = () => {
                 </div>
             )}
 
-
+            
             <div className={`min-h-screen overflow-hidden bg-[#fbf0e0] text-[#5b2614] ${isVisible ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.95),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,205,145,0.22),transparent_22%)]" />
                 <div className="absolute inset-0 opacity-[0.18] bg-[linear-gradient(90deg,rgba(145,72,20,0.03)_1px,transparent_1px),linear-gradient(rgba(145,72,20,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
@@ -355,14 +355,12 @@ const AstroServices = () => {
                                 </div>
 
                                 <h1 className="mt-5 text-[44px] font-semibold leading-[0.98] tracking-[-0.03em] text-[#6a2f16] sm:text-[62px] lg:text-[70px]">
-                                    <span className="block">आकाशीय ज्योतिषशास्त्र सेवाएँ</span>
-                                     </h1>
-                                      <h3>
-                                    <span className="block text-[#d86417]">Celestial Astrology Services</span>
-                                </h3>
+                                    <span className="block">Celestial Astrology</span>
+                                    <span className="block text-[#d86417]">Services</span>
+                                </h1>
 
                                 <p className="mt-5 max-w-xl text-[17px] leading-8 text-[#7d5b45] sm:text-[18px]">
-                                    ज्योतिषस्य पवित्रविज्ञानस्य माध्यमेन स्वजीवनमार्गं प्रकाशयतु — वेदानां नेत्रेण ।
+                                    Illuminate your life path through the sacred science of Jyotish — the eye of the Vedas.
                                 </p>
 
                                 <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -388,7 +386,7 @@ const AstroServices = () => {
                                 <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-[#8b6a52]">
                                     <div className="flex items-center gap-2"><span className="text-[#e09d3e]">👣</span><span>25+ Years of Tradition</span></div>
                                     <div className="flex items-center gap-2"><span className="text-[#e09d3e]">☸</span><span>Vedic Lineage</span></div>
-                                    <div className="flex items-center gap-2"><span className="text-[#e09d3e]">🪔</span><span>200+ Kundlis Studied</span></div>
+                                    <div className="flex items-center gap-2"><span className="text-[#e09d3e]">🪔</span><span>20,000+ Kundlis Studied</span></div>
                                 </div>
                             </div>
 
@@ -433,7 +431,6 @@ const AstroServices = () => {
                         <div className="text-center">
                             <h2 className="text-[31px] font-semibold tracking-[-0.02em] text-[#5c2c18] sm:text-[38px]">Explore Our Astrology Services</h2>
                             <div className="mx-auto mt-3 h-[1px] w-20 bg-gradient-to-r from-transparent via-[#c99c60] to-transparent" />
-                            
                             <p className="mt-4 text-[16px] text-[#8b6a52]">Choose a service to begin your journey of self-discovery and guidance.</p>
                         </div>
 
