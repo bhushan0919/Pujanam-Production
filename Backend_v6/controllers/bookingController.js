@@ -66,10 +66,33 @@ exports.createBooking = async (req, res, next) => {
     } = req.body;
 
     // Validation
-    if (!name || !contact || !dateTime || !address) {
+    if (!name || !dateTime || !address) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: name, contact, dateTime, address are required'
+        message: 'Missing required fields: name, dateTime, address are required'
+      });
+    }
+
+    // ✅ FIX Bug 2: If user is authenticated and contact is missing/invalid,
+    // look up their actual phone number from the database
+    let resolvedContact = contact;
+    if (req.user?.id && (!resolvedContact || !/^\d{10}$/.test(resolvedContact))) {
+      try {
+        const Customer = require('../models/Customer');
+        const customer = await Customer.findById(req.user.id).select('phone').lean();
+        if (customer?.phone) {
+          resolvedContact = customer.phone;
+          console.log(`📱 Using customer DB phone for booking: ${resolvedContact}`);
+        }
+      } catch (lookupErr) {
+        console.warn('⚠️ Could not lookup customer phone:', lookupErr.message);
+      }
+    }
+
+    if (!resolvedContact) {
+      return res.status(400).json({
+        success: false,
+        message: 'Contact number is required'
       });
     }
 
@@ -117,7 +140,7 @@ exports.createBooking = async (req, res, next) => {
 
     // Create booking object (not saved yet for pandit-specific bookings)
     const bookingData = {
-      name, contact, email,
+      name, contact: resolvedContact, email,
       serviceId: serviceId || null,
       panditId: panditId || null,
       dateTime: new Date(dateTime),
@@ -130,14 +153,14 @@ exports.createBooking = async (req, res, next) => {
       status: panditId ? 'pending' : 'pending'
     };
 
-    // ✅ FIX 2: City validation for ALL booking types (runs before any returns)
+    // City validation — check pandits exist in that city (regardless of current availability)
     if (finalUserLocation && finalUserLocation !== 'Unknown') {
+      const escapedLocation = finalUserLocation.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const panditsInCity = await Pandit.countDocuments({
-        location: { $regex: `^${finalUserLocation}$`, $options: 'i' },
-        isAvailable: true
+        location: { $regex: `^${escapedLocation}$`, $options: 'i' }
       });
 
-      console.log(`🏙️ City validation for ${finalUserLocation}: ${panditsInCity} pandits available`);
+      console.log(`🏙️ City validation for ${finalUserLocation}: ${panditsInCity} pandits found`);
 
       if (panditsInCity === 0) {
         const availableCities = await Pandit.distinct('location');
@@ -223,41 +246,20 @@ exports.createBooking = async (req, res, next) => {
 
     // ✅ FIX 5: For service-only bookings (no specific pandit)
     if (serviceId && !panditId) {
-      console.log('🔍 Starting pandit search process...');
+      console.log('🔍 Saving booking — pandits will be notified after payment confirmation...');
       
-      // Create and save booking
+      // Create and save booking — do NOT notify pandits yet (wait for advance payment)
       const booking = new Booking(bookingData);
       await booking.save();
       console.log('✅ Booking saved:', booking._id);
       
-      const suitablePandits = await NotificationService.findSuitablePandits(booking);
-      
-      if (suitablePandits.length > 0) {
-        console.log(`📢 Found ${suitablePandits.length} suitable pandits, sending notifications...`);
-        const io = req.app.get('io');
-        await NotificationService.notifyPandits(booking, suitablePandits, io);
-        
-        booking.status = 'notified';
-        booking.notifiedPandits = suitablePandits.map(p => p._id);
-        await booking.save();
-        
-        return res.status(201).json({
-          success: true,
-          booking,
-          message: `Booking created! Notifications sent to ${suitablePandits.length} pandits in ${finalUserLocation}.`,
-          panditsNotified: suitablePandits.length,
-          location: finalUserLocation
-        });
-      } else {
-        console.log('⚠️ No suitable pandits found');
-        return res.status(201).json({
-          success: true,
-          booking,
-          message: `Booking created! No pandits currently available in ${finalUserLocation}. Our team will contact you shortly to arrange a pandit.`,
-          panditsNotified: 0,
-          location: finalUserLocation
-        });
-      }
+      return res.status(201).json({
+        success: true,
+        booking,
+        message: 'Booking created! Please complete the advance payment to confirm.',
+        panditsNotified: 0,
+        location: finalUserLocation
+      });
     }
 
     // Fallback (should not reach here)

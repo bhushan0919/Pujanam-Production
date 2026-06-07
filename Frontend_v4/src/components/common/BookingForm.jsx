@@ -48,9 +48,10 @@ export default function BookingForm({ service, pandit, onSuccess, onClose }) {
     if (isAuthenticated && user) {
       setForm(prev => ({
         ...prev,
-        name: user.name || "",
-        email: user.email || "",
-        contact: user.phone || ""
+        name: user.name || prev.name || "",
+        email: user.email || prev.email || "",
+        // user.phone from JWT/localStorage — keep existing value if already filled
+        contact: user.phone || user.contact || prev.contact || ""
       }));
     }
   }, [isAuthenticated, user]);
@@ -193,6 +194,14 @@ export default function BookingForm({ service, pandit, onSuccess, onClose }) {
     setTotalAmount(0);
   };
 
+  const handlePaymentFailure = async () => {
+    // Always close the payment modal first
+    setShowPayment(false);
+    setCreatedBookingId(null);
+    setTotalAmount(0);
+    toast.error('❌ Payment failed. Booking has been cancelled. Please create a new booking to try again.');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -213,7 +222,12 @@ export default function BookingForm({ service, pandit, onSuccess, onClose }) {
       return;
     }
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      // Scroll to first error
+      const firstError = document.querySelector('.text-red-600');
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     if (!validateCity()) return;
 
     setLoading(true);
@@ -244,11 +258,15 @@ export default function BookingForm({ service, pandit, onSuccess, onClose }) {
         setShowPayment(true);
         localStorage.removeItem('pendingBooking');
       } else {
-        alert("❌ Booking failed: " + (result.message || "Unknown error"));
+        toast.error("❌ Booking failed: " + (result.message || "Unknown error"));
       }
     } catch (err) {
       console.error('Booking error:', err);
-      alert("❌ Booking failed. Please try again later.");
+      const serverMessage =
+        err.response?.data?.userMessage ||
+        err.response?.data?.message ||
+        (err.response?.data?.errors?.length ? err.response.data.errors.join(', ') : null);
+      toast.error("❌ Booking failed: " + (serverMessage || "Please try again later."));
     } finally {
       setLoading(false);
     }
@@ -372,10 +390,10 @@ export default function BookingForm({ service, pandit, onSuccess, onClose }) {
                 required
                 className={`w-full rounded-lg border-2 px-4 py-3 text-base transition focus:outline-none focus:ring-4 focus:ring-blue-100 ${errors.contact ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white'}`}
                 placeholder="10-digit mobile number"
-                disabled={isAuthenticated}
               />
               {errors.contact && <span className="mt-2 block text-xs font-medium text-red-600">{errors.contact}</span>}
-              {isAuthenticated && <small className="mt-1 block text-xs italic leading-5 text-slate-500">Auto-filled from your profile</small>}
+              {isAuthenticated && form.contact && <small className="mt-1 block text-xs italic leading-5 text-slate-500">Auto-filled from your profile. You can edit if needed.</small>}
+              {isAuthenticated && !form.contact && <small className="mt-1 block text-xs italic leading-5 text-amber-600">⚠️ Please enter your mobile number to proceed.</small>}
             </label>
 
             <label>
@@ -496,11 +514,11 @@ export default function BookingForm({ service, pandit, onSuccess, onClose }) {
               onSuccess={() => {
                 setShowPayment(false);
                 setCreatedBookingId(null);
-                alert("✅ Booking confirmed! Payment successful.");
+                toast.success('✅ Booking confirmed! Payment successful.');
                 if (onSuccess) onSuccess();
                 if (onClose) onClose();
               }}
-              onFailure={handlePaymentCancel}
+              onFailure={handlePaymentFailure}
             />
             <button onClick={handlePaymentCancel} type="button" className="mt-4 inline-flex w-full items-center justify-center rounded-lg border-2 border-slate-200 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-200">Cancel Payment</button>
           </div>

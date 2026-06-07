@@ -344,6 +344,10 @@ exports.updatePandit = async (req, res) => {
     // Handle password - only update if provided and not placeholder
     if (updateData.password === '********' || !updateData.password) {
       delete updateData.password;
+    } else {
+      // findByIdAndUpdate bypasses the pre-save hook, so we hash manually
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(updateData.password, salt);
     }
 
     const updatedPandit = await Pandit.findByIdAndUpdate(

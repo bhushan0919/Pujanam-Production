@@ -118,12 +118,44 @@ router.get('/notifications', async (req, res) => {
     .sort({ createdAt: -1 })
     .lean();
     
-    // Filter out notifications where booking no longer exists
-    const validNotifications = notifications.filter(n => n.bookingId !== null);
+    // Filter out notifications where booking no longer exists or was cancelled/unpaid
+    const validNotifications = notifications.filter(n => {
+      if (!n.bookingId) return false;
+      // Only show notifications for paid bookings (payment confirmed)
+      const booking = n.bookingId;
+      return booking.paymentStatus === 'completed' && booking.status !== 'cancelled';
+    });
     
-    console.log(`📊 Found ${validNotifications.length} valid notifications`);
+    console.log(`📊 Found ${validNotifications.length} valid (paid) notifications`);
+
+    // Format to match what the frontend notification card expects
+    const formatted = validNotifications.map(n => {
+      const booking = n.bookingId;
+      return {
+        _id: n._id,
+        notificationId: n._id,
+        bookingId: booking._id,
+        type: n.type,
+        message: n.message,
+        serviceName: booking.serviceId?.name || 'Puja Service',
+        servicePrice: booking.serviceId?.price || booking.price || 'N/A',
+        bookingDateTime: booking.dateTime,
+        location: booking.userLocation || booking.location || 'Not specified',
+        customerName: booking.name || 'Not provided',
+        customerContact: booking.contact || 'Not provided',
+        customerEmail: booking.email || '',
+        price: booking.price || booking.serviceId?.price || 'N/A',
+        contact: booking.contact || 'Not provided',
+        address: booking.address || 'Not provided',
+        message: booking.message || '',
+        status: booking.status,
+        createdAt: n.createdAt,
+        expiresAt: n.expiresAt,
+        isRead: n.isRead
+      };
+    });
     
-    res.json({ success: true, notifications: validNotifications });
+    res.json({ success: true, notifications: formatted });
     
   } catch (error) {
     console.error('❌ Notifications error:', error);
@@ -1024,10 +1056,9 @@ router.post('/change-password', async (req, res) => {
       });
     }
     
-    // Hash and save new password
-    const salt = await bcrypt.genSalt(10);
-    pandit.password = await bcrypt.hash(newPassword, salt);
-    pandit.isFirstLogin = false; // Mark as no longer first login
+    // Use plain assignment — the pre-save hook will hash it once
+    pandit.password = newPassword;
+    pandit.isFirstLogin = false;
     await pandit.save();
     
     // Generate new token

@@ -443,6 +443,8 @@ const AdminPanel = () => {
   // Form states
   const [panditForm, setPanditForm] = useState({
     name: '',
+    username: '',
+    password: 'pandit123',
     location: '',
     services: [],
     contact: '',

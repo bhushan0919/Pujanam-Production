@@ -7,14 +7,12 @@ exports.validateBooking = [
     .withMessage('Name is required')
     .isLength({ min: 2, max: 50 })
     .withMessage('Name must be between 2 and 50 characters')
-    .trim()
-    .escape(),
+    .trim(),
   
   body('contact')
-    .notEmpty()
-    .withMessage('Contact number is required')
-    .isMobilePhone('en-IN')
-    .withMessage('Please enter a valid Indian mobile number'),
+    .optional({ nullable: true, checkFalsy: true })
+    .matches(/^\d{10}$/)
+    .withMessage('Please enter a valid 10-digit mobile number'),
   
   body('email')
     .optional()
@@ -22,19 +20,29 @@ exports.validateBooking = [
     .withMessage('Please enter a valid email address')
     .normalizeEmail(),
   
-  // ✅ FIX: Make serviceId optional (can be null for pandit-only booking)
+  // serviceId: optional, validate only if present and non-empty
   body('serviceId')
-    .optional({ nullable: true, checkFalsy: false })
-    .isMongoId()
-    .withMessage('Invalid service ID'),
+    .optional({ nullable: true, checkFalsy: true })
+    .custom((value) => {
+      if (!value) return true; // null/undefined/empty — skip
+      if (!/^[a-fA-F0-9]{24}$/.test(value)) {
+        throw new Error('Invalid service ID');
+      }
+      return true;
+    }),
   
-  // ✅ Add validation for panditId (optional)
+  // panditId: optional, validate only if present and non-empty
   body('panditId')
-    .optional({ nullable: true, checkFalsy: false })
-    .isMongoId()
-    .withMessage('Invalid pandit ID'),
+    .optional({ nullable: true, checkFalsy: true })
+    .custom((value) => {
+      if (!value) return true; // null/undefined/empty — skip
+      if (!/^[a-fA-F0-9]{24}$/.test(value)) {
+        throw new Error('Invalid pandit ID');
+      }
+      return true;
+    }),
   
-  // ✅ Custom validator: Either serviceId or panditId must be provided
+  // Either serviceId or panditId must be provided
   body().custom((value, { req }) => {
     const { serviceId, panditId } = req.body;
     if (!serviceId && !panditId) {
@@ -46,11 +54,13 @@ exports.validateBooking = [
   body('dateTime')
     .notEmpty()
     .withMessage('Date and time is required')
-    .isISO8601()
-    .withMessage('Invalid date format')
     .custom((value) => {
       const selectedDate = new Date(value);
-      const now = new Date();
+      if (isNaN(selectedDate.getTime())) {
+        throw new Error('Invalid date format');
+      }
+      // Allow 30-minute buffer to handle timezone differences (IST = UTC+5:30)
+      const now = new Date(Date.now() - 30 * 60 * 1000);
       if (selectedDate <= now) {
         throw new Error('Booking date must be in the future');
       }
@@ -62,8 +72,7 @@ exports.validateBooking = [
     .withMessage('Address is required')
     .isLength({ min: 3, max: 500 })
     .withMessage('Address must be between 3 and 500 characters')
-    .trim()
-    .escape(),
+    .trim(),
 
   (req, res, next) => {
     const errors = validationResult(req);

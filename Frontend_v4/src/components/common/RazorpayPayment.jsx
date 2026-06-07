@@ -98,7 +98,7 @@ const RazorpayPayment = ({ bookingId, totalAmount, onSuccess, onFailure }) => {
           modal: {
             ondismiss: async () => {
               setLoading(false);
-              // Cancel the booking when user closes the payment modal
+              // User deliberately closed the Razorpay modal — cancel the booking silently
               const { token: freshToken } = authStorage.getAuth('user');
               if (freshToken && bookingId) {
                 try {
@@ -109,6 +109,7 @@ const RazorpayPayment = ({ bookingId, totalAmount, onSuccess, onFailure }) => {
                   });
                 } catch (e) { console.error('Failed to cancel booking on dismiss:', e); }
               }
+              // onFailure will close the modal overlay in BookingForm
               if (onFailure) onFailure();
             }
           }
@@ -117,9 +118,8 @@ const RazorpayPayment = ({ bookingId, totalAmount, onSuccess, onFailure }) => {
         const razorpay = new window.Razorpay(options);
 
         // ✅ Handle failure
-        razorpay.on('payment.failed', async () => {
+        razorpay.on('payment.failed', async (response) => {
           setLoading(false);
-          alert('❌ Payment failed. Booking has been cancelled. Please create a new booking to try again.');
           // Cancel the booking on payment failure
           const { token: freshToken } = authStorage.getAuth('user');
           if (freshToken && bookingId) {
@@ -131,6 +131,7 @@ const RazorpayPayment = ({ bookingId, totalAmount, onSuccess, onFailure }) => {
               });
             } catch (e) { console.error('Failed to cancel booking on failure:', e); }
           }
+          // onFailure closes the modal and shows toast — don't alert here
           onFailure?.();
         });
 

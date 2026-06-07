@@ -83,7 +83,11 @@ const verifyTokenBeforeRequest = (config) => {
   } else if (config.url?.startsWith('/user/')) {
     authType = 'user';
     token = authStorage.getAuth('user').token;
-  } else if (config.url === '/free-astro/kundali' && config.method === 'post') {
+  } else if (
+    (config.url === '/free-astro/kundali' && config.method === 'post') ||
+    config.url?.startsWith('/free-astro/horoscope/') ||
+    config.url?.startsWith('/free-astro/all-horoscopes')
+  ) {
     authType = 'user';
     token = authStorage.getAuth('user').token;
   } else if (config.url?.startsWith('/bookings') && config.method !== 'post') {
@@ -159,7 +163,7 @@ api.interceptors.response.use(
 
       if (url.startsWith('/admin/')) authType = 'admin';
       else if (url.startsWith('/pandit/')) authType = 'pandit';
-      else if (url.startsWith('/user/') || url.startsWith('/bookings') || url === '/free-astro/kundali') authType = 'user';
+      else if (url.startsWith('/user/') || url.startsWith('/bookings') || url === '/free-astro/kundali' || url.startsWith('/free-astro/horoscope/') || url.startsWith('/free-astro/all-horoscopes')) authType = 'user';
 
       if (authType) {
         // Check if it's a real token expiry or just a temporary issue
