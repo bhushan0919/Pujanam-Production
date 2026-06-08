@@ -781,20 +781,20 @@ const AdminPanel = () => {
 
   // Enhanced array item handlers
   const addService = () => {
-    if (newService && !panditForm.services.includes(newService)) {
-      setPanditForm({
-        ...panditForm,
-        services: [...panditForm.services, newService]
+    if (newService) {
+      setPanditForm(prev => {
+        if (prev.services.includes(newService)) return prev;
+        return { ...prev, services: [...prev.services, newService] };
       });
       setNewService('');
     }
   };
 
   const addLanguage = () => {
-    if (newLanguage && !panditForm.languages.includes(newLanguage)) {
-      setPanditForm({
-        ...panditForm,
-        languages: [...panditForm.languages, newLanguage]
+    if (newLanguage) {
+      setPanditForm(prev => {
+        if (prev.languages.includes(newLanguage)) return prev;
+        return { ...prev, languages: [...prev.languages, newLanguage] };
       });
       setNewLanguage('');
     }
@@ -802,18 +802,20 @@ const AdminPanel = () => {
 
 
   const addDetail = () => {
-    if (newDetail && !serviceForm.details.includes(newDetail)) {
-      setServiceForm({
-        ...serviceForm,
-        details: [...serviceForm.details, newDetail]
+    if (newDetail) {
+      setServiceForm(prev => {
+        if (prev.details.includes(newDetail)) return prev;
+        return { ...prev, details: [...prev.details, newDetail] };
       });
       setNewDetail('');
     }
   };
 
-  const removeArrayItem = (field, index, setForm, form) => {
-    const newArray = form[field].filter((_, i) => i !== index);
-    setForm({ ...form, [field]: newArray });
+  const removeArrayItem = (field, index, setForm) => {
+    setForm(prev => ({
+      ...prev,
+      [field]: prev[field].filter((_, i) => i !== index)
+    }));
   };
 
   // Filter data based on search
@@ -1695,7 +1697,7 @@ const AdminPanel = () => {
                       <FontAwesomeIcon icon={faScrewdriverWrench} /> {service}
                       <button
                         type="button"
-                        onClick={() => removeArrayItem('services', index, setPanditForm, panditForm)}
+                        onClick={() => removeArrayItem('services', index, setPanditForm)}
                         aria-label={`Remove ${service}`}
                       >
                         <FontAwesomeIcon icon={faCircleXmark} />
@@ -1866,7 +1868,7 @@ const AdminPanel = () => {
                     <FontAwesomeIcon icon={faCheck} /> {detail}
                     <button
                       type="button"
-                      onClick={() => removeArrayItem('details', index, setServiceForm, serviceForm)}
+                      onClick={() => removeArrayItem('details', index, setServiceForm)}
                       aria-label={`Remove ${detail}`}
                     >
                       <FontAwesomeIcon icon={faCircleXmark} />
