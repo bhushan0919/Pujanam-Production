@@ -470,6 +470,7 @@ const AdminPanel = () => {
   const [newService, setNewService] = useState('');
   const [newLanguage, setNewLanguage] = useState('');
   const [newDetail, setNewDetail] = useState('');
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -674,6 +675,7 @@ const AdminPanel = () => {
       duration: '2-3 hours'
     });
     setNewDetail('');
+    setImagePreview(null);
     setEditingItem(null);
   };
 
@@ -729,6 +731,7 @@ const AdminPanel = () => {
       category: service.category || 'regular',
       duration: service.duration || '2-3 hours'
     });
+    setImagePreview(null); // existing URL image is shown via serviceForm.image directly
     setEditingItem(service);
   };
 
@@ -1926,14 +1929,29 @@ const AdminPanel = () => {
                       return;
                     }
                     // Set the image as File object
-                    setServiceForm({ ...serviceForm, image: file });
+                    setServiceForm(prev => ({ ...prev, image: file }));
 
-                    // Show preview
+                    // Show preview inline
                     const previewUrl = URL.createObjectURL(file);
-                    // You can store preview URL in state if needed
+                    setImagePreview(previewUrl);
                   }
                 }}
               />
+
+              {/* Inline image preview — shown right after file is selected */}
+              {(imagePreview || (serviceForm.image && !(serviceForm.image instanceof File))) && (
+                <div className="image-preview">
+                  <p>Image Preview:</p>
+                  <img
+                    src={imagePreview || serviceForm.image}
+                    alt="Service preview"
+                    style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '8px', marginTop: '8px' }}
+                  />
+                  {serviceForm.image instanceof File && (
+                    <p className="file-name">{serviceForm.image.name}</p>
+                  )}
+                </div>
+              )}
 
 
               <div className="form-group">
@@ -2733,20 +2751,6 @@ const AdminPanel = () => {
         </div>
       )}
 
-      {/* Image Preview */}
-      {serviceForm.image && (
-        <div className="image-preview">
-          <p>Image Preview:</p>
-          <img
-            src={serviceForm.image instanceof File ? URL.createObjectURL(serviceForm.image) : serviceForm.image}
-            alt="Service preview"
-            style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '8px' }}
-          />
-          {serviceForm.image instanceof File && (
-            <p className="file-name">{serviceForm.image.name}</p>
-          )}
-        </div>
-      )}
 
 
       {/* Booking Details Modal */}
