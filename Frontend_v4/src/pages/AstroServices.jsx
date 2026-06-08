@@ -386,7 +386,7 @@ const AstroServices = () => {
                                 <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-[#8b6a52]">
                                     <div className="flex items-center gap-2"><span className="text-[#e09d3e]">👣</span><span>25+ Years of Tradition</span></div>
                                     <div className="flex items-center gap-2"><span className="text-[#e09d3e]">☸</span><span>Vedic Lineage</span></div>
-                                    <div className="flex items-center gap-2"><span className="text-[#e09d3e]">🪔</span><span>20,000+ Kundlis Studied</span></div>
+                                    <div className="flex items-center gap-2"><span className="text-[#e09d3e]">🪔</span><span>200+ Kundlis Studied</span></div>
                                 </div>
                             </div>
 

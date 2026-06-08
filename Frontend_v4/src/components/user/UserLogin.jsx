@@ -508,45 +508,11 @@ const UserLogin = () => {
                       />
                       <FontAwesomeIcon icon={faEnvelope} className="auth-input-icon" />
                     </div>
-                    <button
-                      type="button"
-                      className="auth-inline-cta"
-                      onClick={handleSendOtp}
-                      disabled={otpLoading || registerLoading || resendCountdown > 0}
-                    >
-                      {otpButtonLabel}
-                    </button>
+                   
                   </div>
                 </div>
 
-                {otpSent && (
-                  <div className="auth-field">
-                    <label htmlFor="register-otp">OTP <span className="auth-required">*</span></label>
-                    <div className="auth-input-shell auth-input-shell-status">
-                      <input
-                        id="register-otp"
-                        type="text"
-                        name="otp"
-                        placeholder="Enter 6-digit OTP"
-                        value={registerData.otp}
-                        onChange={handleRegisterChange}
-                        maxLength="6"
-                        inputMode="numeric"
-                        required
-                        disabled={registerLoading}
-                      />
-                      {otpVerifyStatus === 'checking' && (
-                        <FontAwesomeIcon icon={faSpinner} spin className="auth-input-status-icon auth-input-status-checking" />
-                      )}
-                      {otpVerifyStatus === 'valid' && (
-                        <FontAwesomeIcon icon={faCircleCheck} className="auth-input-status-icon auth-input-status-valid" />
-                      )}
-                      {otpVerifyStatus === 'invalid' && (
-                        <FontAwesomeIcon icon={faCircleXmark} className="auth-input-status-icon auth-input-status-invalid" />
-                      )}
-                    </div>
-                  </div>
-                )}
+                
 
                 <div className="auth-field">
                   <label htmlFor="register-phone">Mobile Number <span className="auth-required">*</span></label>
@@ -604,6 +570,7 @@ const UserLogin = () => {
                       required
                       disabled={registerLoading || otpLoading}
                     />
+
                     <button
                       type="button"
                       className="auth-input-toggle"
@@ -614,6 +581,46 @@ const UserLogin = () => {
                     </button>
                   </div>
                 </div>
+
+<div className="auth-field">
+                 <button
+                      type="button"
+                      className="auth-inline-cta"
+                      onClick={handleSendOtp}
+                      disabled={otpLoading || registerLoading || resendCountdown > 0}
+                    >
+                      {otpButtonLabel}
+                    </button>
+                    </div>
+
+                    {otpSent && (
+                  <div className="auth-field">
+                    <label htmlFor="register-otp">OTP <span className="auth-required">*</span></label>
+                    <div className="auth-input-shell auth-input-shell-status">
+                      <input
+                        id="register-otp"
+                        type="text"
+                        name="otp"
+                        placeholder="Enter 6-digit OTP"
+                        value={registerData.otp}
+                        onChange={handleRegisterChange}
+                        maxLength="6"
+                        inputMode="numeric"
+                        required
+                        disabled={registerLoading}
+                      />
+                      {otpVerifyStatus === 'checking' && (
+                        <FontAwesomeIcon icon={faSpinner} spin className="auth-input-status-icon auth-input-status-checking" />
+                      )}
+                      {otpVerifyStatus === 'valid' && (
+                        <FontAwesomeIcon icon={faCircleCheck} className="auth-input-status-icon auth-input-status-valid" />
+                      )}
+                      {otpVerifyStatus === 'invalid' && (
+                        <FontAwesomeIcon icon={faCircleXmark} className="auth-input-status-icon auth-input-status-invalid" />
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <label className="auth-policy">
                   <input
