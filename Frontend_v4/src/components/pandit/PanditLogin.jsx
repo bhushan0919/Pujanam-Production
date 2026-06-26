@@ -158,7 +158,7 @@ const PanditLogin = ({ onLogin }) => {
 
               <button type="submit" className="auth-submit" disabled={loading}>
                 <FontAwesomeIcon icon={faLock} />
-                {loading ? <LoadingSpinner size="small" /> : ' Sign In'}
+                {loading ? <LoadingSpinner size="small" inline /> : ' Sign In'}
               </button>
 
               <div className="pandit-support-note">

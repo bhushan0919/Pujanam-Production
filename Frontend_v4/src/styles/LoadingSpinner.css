@@ -65,6 +65,30 @@
     isolation: isolate;
 }
 
+/* ===== Inline / Button Spinner ===== */
+/* Renders as a tiny inline-flex element that matches the surrounding text height.
+   No padding, no block layout — the button will not grow at all. */
+.spinner.spinner-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+/* Sizes feel right inside a button at these dimensions */
+.spinner.spinner-inline.small  { width: 14px; height: 14px; }
+.spinner.spinner-inline.medium { width: 18px; height: 18px; }
+.spinner.spinner-inline.large  { width: 22px; height: 22px; }
+
+/* Thinner stroke looks better at small button sizes */
+.spinner.spinner-inline .spinner-circle {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-width: 2px;
+}
+
 /* ===== Spinner Sizes ===== */
 .spinner.small {
     width: var(--spinner-small);

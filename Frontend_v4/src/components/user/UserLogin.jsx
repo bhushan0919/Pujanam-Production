@@ -439,7 +439,7 @@ const UserLogin = () => {
                   <p className="auth-error-message" style={{fontSize:'13px',marginBottom:'8px'}}>⚠️ You must accept the Privacy Policy and Terms &amp; Conditions to continue.</p>
                 )}
                 <button type="submit" className="auth-submit" disabled={loginLoading || !loginAcceptPolicies}>
-                  {loginLoading ? <LoadingSpinner size="small" /> : <><FontAwesomeIcon icon={faLock} /> Sign In</>}
+                  {loginLoading ? <LoadingSpinner size="small" inline /> : <><FontAwesomeIcon icon={faLock} /> Sign In</>}
                 </button>
 
                 <button

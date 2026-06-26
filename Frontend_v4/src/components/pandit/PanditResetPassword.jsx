@@ -115,7 +115,7 @@ const PanditResetPassword = () => {
             </div>
 
             <button type="submit" className="login-btn" disabled={loading}>
-              {loading ? <LoadingSpinner size="small" /> : 'Reset Password'}
+              {loading ? <LoadingSpinner size="small" inline /> : 'Reset Password'}
             </button>
 
             <div className="login-footer">

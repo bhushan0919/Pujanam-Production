@@ -226,7 +226,7 @@ const ForgotPassword = () => {
                 </div>
 
                 <button type="submit" className="auth-submit" disabled={loading}>
-                  {loading ? <LoadingSpinner size="small" /> : 'Send Reset Code'}
+                  {loading ? <LoadingSpinner size="small" inline /> : 'Send Reset Code'}
                 </button>
 
                 <div className="auth-divider forgot-inline-divider">
@@ -264,7 +264,7 @@ const ForgotPassword = () => {
                 </div>
 
                 <button type="submit" className="auth-submit" disabled={loading}>
-                  {loading ? <LoadingSpinner size="small" /> : 'Verify Code'}
+                  {loading ? <LoadingSpinner size="small" inline /> : 'Verify Code'}
                 </button>
 
                 <button
@@ -325,7 +325,7 @@ const ForgotPassword = () => {
                 </div>
 
                 <button type="submit" className="auth-submit" disabled={loading}>
-                  {loading ? <LoadingSpinner size="small" /> : 'Reset Password'}
+                  {loading ? <LoadingSpinner size="small" inline /> : 'Reset Password'}
                 </button>
 
                 <div className="auth-switch-copy">

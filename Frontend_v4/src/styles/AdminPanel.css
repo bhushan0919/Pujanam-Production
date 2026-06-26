@@ -140,6 +140,7 @@ body {
     box-shadow: var(--shadow-lg);
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: var(--transition-normal);
+    cursor: default;
 }
 
 .admin-header:hover {
@@ -276,6 +277,7 @@ body {
     animation: fadeInUp 0.5s ease-out;
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: var(--transition-normal);
+    cursor: default;
 }
 
 .admin-section:hover {
@@ -326,6 +328,7 @@ body {
     justify-content: center;
     align-items: center;
     word-wrap: break-word;
+    cursor: default;
 }
 
 .stat-card::before {
@@ -569,21 +572,46 @@ input[type="file"]:hover {
     font-weight: 500;
     animation: scaleIn 0.2s ease-out;
     transition: var(--transition-fast);
+    isolation: isolate; /* prevent stacking context bleed */
+    position: relative;
+    user-select: none;
+}
+
+/* Prevent the chip text / icon from intercepting pointer events */
+.array-item > svg,
+.array-item > span {
+    pointer-events: none;
 }
 
 .array-item button {
     background: rgba(255, 255, 255, 0.2);
     border: none;
     color: white;
-    width: 20px;
-    height: 20px;
+    /* Larger visible + hit area */
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     transition: var(--transition-fast);
+    /* Extend clickable area via padding without changing visual size */
+    padding: 4px;
+    margin: -4px;
+    /* Ensure the button is always on top */
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+/* Prevent the FontAwesome SVG inside the button from eating click events */
+.array-item button svg,
+.array-item button * {
+    pointer-events: none;
 }
 
 .array-item button:hover {
@@ -687,6 +715,7 @@ input[type="file"]:hover {
     border: 1px solid var(--gray-200);
     transition: var(--transition-normal);
     animation: slideIn 0.3s ease-out;
+    cursor: default;
 }
 
 .admin-item:hover {
@@ -1768,55 +1797,48 @@ input[type="file"]:hover {
 }
 
 /* AdminPanel.css - Add these styles */
-.services-dropdown-container {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 10px;
+.services-dropdown-container{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:stretch;
+  width:100%;
+  gap:12px;
 }
 
-.services-select {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  background-color: white;
-  cursor: pointer;
+.services-select{
+  width:100%;
+  min-width:0;
 }
 
-.services-select:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+.array-items{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
 }
 
-.services-select:disabled {
-  background-color: #f5f5f5;
-  cursor: not-allowed;
+.array-item{
+  max-width:100%;
+  word-break:break-word;
 }
 
-.loading-text {
-  font-size: 12px;
-  color: #667eea;
-}
+@media (max-width: 768px){
+  .form-row{
+    grid-template-columns:1fr;
+  }
 
-.warning-message {
-  background: #fff3cd;
-  color: #856404;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  margin-top: 5px;
-}
+  .admin-section{
+    padding:16px;
+  }
 
-.field-hint {
-  display: block;
-  margin-top: 8px;
-  font-size: 12px;
-  color: #666;
-}
+  .services-dropdown-container{
+    flex-direction:column;
+    align-items:stretch;
+  }
 
+  .item-actions{
+    flex-wrap:wrap;
+  }
+}
 /* Style for disabled options in select */
 .services-select option:disabled {
   color: #999;

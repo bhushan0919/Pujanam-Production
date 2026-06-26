@@ -102,7 +102,7 @@ const PanditForgotPassword = () => {
                 </div>
 
                 <button type="submit" className="auth-submit" disabled={loading}>
-                  {loading ? <LoadingSpinner size="small" /> : 'Send Reset Link'}
+                  {loading ? <LoadingSpinner size="small" inline /> : 'Send Reset Link'}
                 </button>
               </form>
             ) : (

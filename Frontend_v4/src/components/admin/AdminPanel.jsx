@@ -1503,7 +1503,7 @@ const AdminPanel = () => {
                   type="text"
                   placeholder="e.g., Pune, Mumbai, Delhi"
                   value={panditForm.location}
-                  onChange={(e) => setPanditForm({ ...panditForm, location: e.target.value })}
+                  onChange={(e) => setPanditForm(prev => ({ ...prev, location: e.target.value }))}
                   required
                 />
               </div>
@@ -1514,7 +1514,7 @@ const AdminPanel = () => {
                   type="email"
                   placeholder="pandit@example.com"
                   value={panditForm.email}
-                  onChange={(e) => setPanditForm({ ...panditForm, email: e.target.value })}
+                  onChange={(e) => setPanditForm(prev => ({ ...prev, email: e.target.value }))}
                   required
                 />
               </div>
@@ -1528,7 +1528,7 @@ const AdminPanel = () => {
                   type="text"
                   placeholder="Generate username from name"
                   value={panditForm.username || generateUsername(panditForm.name)}
-                  onChange={(e) => setPanditForm({ ...panditForm, username: e.target.value })}
+                  onChange={(e) => setPanditForm(prev => ({ ...prev, username: e.target.value }))}
                   required
                 />
                 <small>Will be auto-generated from name if empty</small>
@@ -1541,7 +1541,7 @@ const AdminPanel = () => {
                   type="text"
                   placeholder="Default password"
                   value={panditForm.password || "pandit123"}
-                  onChange={(e) => setPanditForm({ ...panditForm, password: e.target.value })}
+                  onChange={(e) => setPanditForm(prev => ({ ...prev, password: e.target.value }))}
                   required={!editingItem}
                 />
                 <small>Default: pandit123</small>
@@ -1556,7 +1556,7 @@ const AdminPanel = () => {
                   type="tel"
                   placeholder="10-digit mobile number"
                   value={panditForm.contact}
-                  onChange={(e) => setPanditForm({ ...panditForm, contact: e.target.value })}
+                  onChange={(e) => setPanditForm(prev => ({ ...prev, contact: e.target.value }))}
                   required
                 />
               </div>
@@ -1570,10 +1570,10 @@ const AdminPanel = () => {
                   step="0.1"
                   placeholder="4.5"
                   value={panditForm.rating || 0}
-                  onChange={(e) => setPanditForm({
-                    ...panditForm,
-                    rating: parseFloat(e.target.value) || 0 // ✅ Handle NaN
-                  })}
+                  onChange={(e) => setPanditForm(prev => ({
+                    ...prev,
+                    rating: parseFloat(e.target.value) || 0
+                  }))}
                   required
                 />
               </div>
@@ -1588,10 +1588,10 @@ const AdminPanel = () => {
                   min="0"
                   placeholder="Years of experience"
                   value={panditForm.experience || 0} // ✅ Add fallback
-                  onChange={(e) => setPanditForm({
-                    ...panditForm,
-                    experience: parseInt(e.target.value) || 0 // ✅ Handle NaN
-                  })}
+                  onChange={(e) => setPanditForm(prev => ({
+                    ...prev,
+                    experience: parseInt(e.target.value) || 0
+                  }))}
                   required
                 />
               </div>
@@ -1612,7 +1612,7 @@ const AdminPanel = () => {
                         setMessage('❌ Image size should be less than 5MB');
                         return;
                       }
-                      setPanditForm({ ...panditForm, image: file });
+                      setPanditForm(prev => ({ ...prev, image: file }));
                     }
                   }}
                 />
@@ -1655,10 +1655,10 @@ const AdminPanel = () => {
                   value=""
                   onChange={(e) => {
                     const selectedService = e.target.value;
-                    if (selectedService && !panditForm.services.includes(selectedService)) {
-                      setPanditForm({
-                        ...panditForm,
-                        services: [...panditForm.services, selectedService]
+                    if (selectedService) {
+                      setPanditForm(prev => {
+                        if (prev.services.includes(selectedService)) return prev;
+                        return { ...prev, services: [...prev.services, selectedService] };
                       });
                     }
                     // Reset select to default after selection
@@ -1817,7 +1817,7 @@ const AdminPanel = () => {
                 type="text"
                 placeholder="e.g., Satya Narayan Puja, Ganesh Puja"
                 value={serviceForm.name}
-                onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })}
+                onChange={(e) => setServiceForm(prev => ({ ...prev, name: e.target.value }))}
                 required
               />
             </div>
@@ -1828,7 +1828,7 @@ const AdminPanel = () => {
                 id="service-description"
                 placeholder="Brief description of the service and its significance..."
                 value={serviceForm.description}
-                onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
+                onChange={(e) => setServiceForm(prev => ({ ...prev, description: e.target.value }))}
                 required
                 rows="3"
               />
@@ -1840,7 +1840,7 @@ const AdminPanel = () => {
                 id="service-purpose"
                 placeholder="Main purpose and benefits of this puja..."
                 value={serviceForm.purpose}
-                onChange={(e) => setServiceForm({ ...serviceForm, purpose: e.target.value })}
+                onChange={(e) => setServiceForm(prev => ({ ...prev, purpose: e.target.value }))}
                 rows="2"
               />
             </div>
@@ -1889,7 +1889,7 @@ const AdminPanel = () => {
                   type="text"
                   placeholder="e.g., ₹1099/-, ₹1999/-"
                   value={serviceForm.price}
-                  onChange={(e) => setServiceForm({ ...serviceForm, price: e.target.value })}
+                  onChange={(e) => setServiceForm(prev => ({ ...prev, price: e.target.value }))}
                   required
                 />
               </div>
@@ -1900,7 +1900,7 @@ const AdminPanel = () => {
                   type="text"
                   placeholder="e.g., 2-3 hours, Full day"
                   value={serviceForm.duration}
-                  onChange={(e) => setServiceForm({ ...serviceForm, duration: e.target.value })}
+                  onChange={(e) => setServiceForm(prev => ({ ...prev, duration: e.target.value }))}
                 />
               </div>
             </div>
@@ -1912,26 +1912,21 @@ const AdminPanel = () => {
                 id="service-image"
                 type="file"
                 accept="image/*"
-                required={!editingItem}  // Required for new services
+                required={!editingItem}
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (file) {
-                    // Validate file type
                     if (!file.type.startsWith('image/')) {
                       setMessage('❌ Please select an image file');
-                      e.target.value = ''; // Clear the input
+                      e.target.value = '';
                       return;
                     }
-                    // Validate file size (5MB max)
                     if (file.size > 5 * 1024 * 1024) {
                       setMessage('❌ Image size should be less than 5MB');
                       e.target.value = '';
                       return;
                     }
-                    // Set the image as File object
                     setServiceForm(prev => ({ ...prev, image: file }));
-
-                    // Show preview inline
                     const previewUrl = URL.createObjectURL(file);
                     setImagePreview(previewUrl);
                   }
@@ -1952,22 +1947,21 @@ const AdminPanel = () => {
                   )}
                 </div>
               )}
+            </div>
 
-
-              <div className="form-group">
-                <label htmlFor="service-category">Category *</label>
-                <select
-                  id="service-category"
-                  value={serviceForm.category}
-                  onChange={(e) => setServiceForm({ ...serviceForm, category: e.target.value })}
-                >
-                  <option value="regular">Regular Puja</option>
-                  <option value="festive">Festival Puja</option>
-                  <option value="hawan">Hawan</option>
-                  <option value="shanti">Shanti</option>
-                  <option value="shraddha">Shraddha</option>
-                </select>
-              </div>
+            <div className="form-group">
+              <label htmlFor="service-category">Category *</label>
+              <select
+                id="service-category"
+                value={serviceForm.category}
+                onChange={(e) => setServiceForm(prev => ({ ...prev, category: e.target.value }))}
+              >
+                <option value="regular">Regular Puja</option>
+                <option value="festive">Festival Puja</option>
+                <option value="hawan">Hawan</option>
+                <option value="shanti">Shanti</option>
+                <option value="shraddha">Shraddha</option>
+              </select>
             </div>
 
             <div className="form-actions">

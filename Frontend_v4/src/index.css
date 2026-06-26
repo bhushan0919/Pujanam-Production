@@ -207,9 +207,13 @@ button:hover {
     transform: translateY(-2px);
 }
 
-button:focus,
+/* Show focus ring only for keyboard navigation, not mouse clicks */
+button:focus {
+    outline: none;
+}
 button:focus-visible {
-    outline: 4px auto -webkit-focus-ring-color;
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px; /* draws outside the border-box — no layout shift */
 }
 
 /* ===== Cards ===== */
@@ -429,7 +433,10 @@ label {
         grid-template-columns: 1fr;
     }
     
-    button {
+    /* Only full-width form submit buttons, not all buttons */
+    button.btn-full-width,
+    form > button[type="submit"],
+    .form-actions > button[type="submit"] {
         width: 100%;
         padding: 0.75rem 1rem;
         font-size: 1rem;
@@ -489,8 +496,15 @@ label {
         -webkit-tap-highlight-color: transparent;
     }
     
-    button {
-        min-height: 44px; /* Better touch target */
+    /* Only apply touch minimum to standalone action buttons,
+       NOT to chip remove buttons, icon buttons, etc. */
+    button.btn-primary,
+    button.btn-secondary,
+    button.btn-submit,
+    button.auth-submit,
+    button.login-btn,
+    button[type="submit"] {
+        min-height: 44px; /* Better touch target for main CTAs only */
     }
 }
 

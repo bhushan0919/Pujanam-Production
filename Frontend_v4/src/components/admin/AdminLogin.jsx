@@ -104,7 +104,7 @@ const AdminLogin = ({ onLogin }) => {
             disabled={loading}
           >
             <FontAwesomeIcon icon={faLock} />
-            {loading ? <LoadingSpinner size="small" /> : ' Sign In'}
+            {loading ? <LoadingSpinner size="small" inline /> : ' Sign In'}
           </button>
         </form>
 
